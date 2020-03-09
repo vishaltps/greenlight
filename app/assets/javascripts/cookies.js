@@ -14,7 +14,7 @@
 // You should have received a copy of the GNU Lesser General Public License along
 // with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 
-$(document).ready(function() {
+$(document).on('turbolinks:load', function(){
   $("#cookies-agree-button").click(function() {
     //create a cookie that lasts 1 year
     var cookieDate = new Date();
@@ -23,5 +23,12 @@ $(document).ready(function() {
 
     //hide the banner at the bottom
     $(".cookies-banner").attr("style","display:none !important")
+  })
+
+  $("#maintenance-close").click(function(event) {
+    //create a cookie that lasts 1 year
+    var cookieDate = new Date();
+    cookieDate.setFullYear(cookieDate.getFullYear() + 1); //1 year from now
+    document.cookie = "maintenance_window=" + $(event.target).data("date") + "; path=/; expires=" + cookieDate.toUTCString() + ";"
   })
 })

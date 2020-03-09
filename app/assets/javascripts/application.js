@@ -26,9 +26,13 @@
 // Read Sprockets README (https://github.com/rails/sprockets#sprockets-directives) for details
 // about supported directives.
 //
+//= require turbolinks
+//= require jquery
 //= require tabler
 //= require tabler.plugins
-//= require turbolinks
-//= require_tree .
-//= require jquery
 //= require jquery_ujs
+//= require jquery-ui/widget
+//= require jquery-ui/widgets/sortable
+//= require pickr.min.js
+//= require bootstrap-select.min.js
+//= require_tree .

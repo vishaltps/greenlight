@@ -19,6 +19,7 @@ vendor/bundle
 
 # Ignore production paths.
 /db/production
+/db/production-postgres
 
 # Ignore all logfiles and tempfiles.
 /log/*
@@ -32,9 +33,16 @@ vendor/bundle
 .env
 env
 
+# Ignore yarn configs
+/node_modules
+
 # IDEs
 .idea
 .idea/**
+.vscode
+.vscode/**
 
 config/terms.md
 coverage*
+
+/atom-sftp-sync.json

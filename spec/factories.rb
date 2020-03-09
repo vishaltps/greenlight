@@ -19,7 +19,6 @@
 FactoryBot.define do
   factory :user do
     password = Faker::Internet.password(8)
-
     provider { %w(google twitter).sample }
     uid { rand(10**8) }
     name { Faker::Name.first_name }
@@ -29,10 +28,11 @@ FactoryBot.define do
     password_confirmation { password }
     accepted_terms { true }
     email_verified { true }
+    activated_at { Time.zone.now }
   end
 
   factory :room do
-    name { Faker::Pokemon.name }
+    name { Faker::Games::Pokemon.name }
     owner { create(:user) }
   end
 end

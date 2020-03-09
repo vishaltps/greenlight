@@ -50,7 +50,7 @@ describe PasswordResetsController, type: :controller do
         expect(response).to redirect_to(root_path)
       end
 
-      it "reloads the page if no email exists in the database" do
+      it "redirects to root with success flash if email does not exists" do
         params = {
           password_reset: {
             email: nil,
@@ -58,7 +58,8 @@ describe PasswordResetsController, type: :controller do
         }
 
         post :create, params: params
-        expect(response).to redirect_to(new_password_reset_path)
+        expect(flash[:success]).to be_present
+        expect(response).to redirect_to(root_path)
       end
     end
 
@@ -73,7 +74,9 @@ describe PasswordResetsController, type: :controller do
   end
 
   describe "PATCH #update" do
-    before { allow(Rails.configuration).to receive(:enable_email_verification).and_return(true) }
+    before do
+      allow(Rails.configuration).to receive(:enable_email_verification).and_return(true)
+    end
 
     context "valid user" do
       it "reloads page with notice if password is empty" do
@@ -112,18 +115,15 @@ describe PasswordResetsController, type: :controller do
       end
 
       it "updates attributes if the password update is a success" do
-        user = create(:user)
-        token = "reset_token"
-
-        cost = ActiveModel::SecurePassword.min_cost ? BCrypt::Engine::MIN_COST : BCrypt::Engine.cost
-        user.reset_digest = BCrypt::Password.create(token, cost: cost)
+        user = create(:user, provider: "greenlight")
+        user.create_reset_digest
+        old_digest = user.password_digest
 
         allow(controller).to receive(:valid_user).and_return(nil)
         allow(controller).to receive(:check_expiration).and_return(nil)
-        allow(controller).to receive(:current_user).and_return(user)
 
         params = {
-          id: token,
+          id: user.reset_token,
           user: {
             password: :password,
             password_confirmation: :password,
@@ -131,6 +131,10 @@ describe PasswordResetsController, type: :controller do
         }
 
         patch :update, params: params
+
+        user.reload
+
+        expect(old_digest.eql?(user.password_digest)).to be false
         expect(response).to redirect_to(root_path)
       end
     end

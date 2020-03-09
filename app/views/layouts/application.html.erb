@@ -16,10 +16,27 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title><%= t("greenlight") %></title>
-    <%= csrf_meta_tags %>
+    <% if Rails.configuration.google_analytics %>
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="<%= google_analytics_url %>"></script>
+      <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
 
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.0.13/css/all.css" integrity="sha384-DNOHZ68U8hZfKXOrtjWvjxusGo9WQnrNx2sqG0tfsghAvtVlRW3tvkXWZh58N9jp" crossorigin="anonymous">
+        gtag('config', "<%= ENV["GOOGLE_ANALYTICS_TRACKING_ID"] %>");
+      </script>
+    <% end %>
+
+    <title><%= t("bigbluebutton") %></title>
+    <meta property="og:title" content="<%= t("bigbluebutton", locale: :en) %>" />
+    <meta property="og:type" content="website" />
+    <meta property="og:description" content="<%= t("landing.about", href: "Greenlight", locale: :en) %>" />
+    <meta property="og:url" content="<%= request.base_url %>" />
+    <meta property="og:image" content="<%= logo_image %>" />
+
+    <meta name="viewport" content= "width=device-width, user-scalable=no">
+    <%= csrf_meta_tags %>
 
     <!-- Global javascript variables and helpers. -->
     <script type="text/javascript">
@@ -28,36 +45,45 @@
       window.GreenLight.RELATIVE_ROOT = "<%= relative_root %>"
     </script>
 
-    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500" rel="stylesheet">
-
     <%= stylesheet_link_tag    'application', media: 'all', 'data-turbolinks-track': 'reload' %>
     <%= javascript_include_tag 'application', 'data-turbolinks-track': 'reload' %>
+
+    <!-- Primary color styling -->
+    <%= stylesheet_link_tag themes_primary_path %>
+
+    <script type="text/javascript">
+      // Include the correct translated strings for Javascript
+      window.I18n = <%= current_translations.to_json.html_safe %>
+      window.I18nFallback = <%= fallback_translations.to_json.html_safe %>
+    </script>
   </head>
 
-  <body class="app-background" data-controller="<%= params[:controller] %>" data-action="<%= params[:action] %>">
+  <body class="app-background" data-controller="<%= params[:controller] %>" data-action="<%= params[:action] %>" data-relative-root="<%= Rails.configuration.relative_url_root || "/" %>">
     <%= render "shared/header" %>
 
     <div class="wrapper">
       <% if bigbluebutton_endpoint_default? %>
-        <%= render "shared/error_banner" do %>
-          <i class="fas fa-exclamation-triangle"></i>
-          <p class="d-inline"><%= t("test_install",
-            href: link_to(t("docs").downcase, "http://docs.bigbluebutton.org/install/greenlight-v2.html#2-install-greenlight", target: "_blank")
-          ).html_safe %>
-        <% end %>
+        <div class="alert alert-icon alert-danger text-center mb-0">
+          <div class="flash alert d-inline">
+            <i class="fas fa-exclamation-triangle"></i>
+            <p class="d-inline"><%= t("test_install",
+              href: link_to(t("docs").downcase, "http://docs.bigbluebutton.org/install/greenlight-v2.html#2-install-greenlight", target: "_blank", rel: "noopener")
+            ).html_safe %>
+          </div>
+        </div>
       <% end %>
 
       <% unless Rails.configuration.banner_message.blank? %>
-        <%= render "shared/error_banner" do %>
-          <p class="d-inline"><%= Rails.configuration.banner_message %></p>
-        <% end %>
+        <div class="alert alert-icon alert-danger text-center mb-0">
+          <div class="flash alert d-inline">
+            <p class="d-inline"><%= Rails.configuration.banner_message %></p>
+          </div>
+        </div>
       <% end %>
+
+      <%= render 'shared/flash_messages' unless flash.empty? %>
 
       <%= yield %>
-
-      <% if current_user %>
-        <%= render "shared/modals/create_room_modal" %>
-      <% end %>
     </div>
 
     <%= render "shared/footer" %>

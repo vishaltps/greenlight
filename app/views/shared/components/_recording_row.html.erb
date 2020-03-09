@@ -15,7 +15,7 @@
 
 <tr>
   <td>
-    <div id="recording-title" class="form-inline edit_hover_class" data-recordid="<%= recording[:recordID] %>">
+    <div id="recording-title" class="form-inline edit_hover_class" data-recordid="<%= recording[:recordID] %>" data-room-uid="<%= room_uid_from_bbb(recording[:meetingID]) %>" data-path="<%= rename_recording_path(meetingID: recording[:meetingID], record_id: recording[:recordID]) %>">
       <text id='recording-text'>
         <% if recording[:metadata][:name] %>
           <%= recording[:metadata][:name] %>
@@ -30,7 +30,7 @@
     </div>
   </td>
   <% if recording_thumbnails? %>
-    <td>
+    <td class="overflow-hidden">
       <% p = recording[:playbacks].find do |p| p.key?(:preview) end %>
       <% if p %>
         <% safe_recording_images(p[:preview][:images][:image]).each do |img| %>
@@ -39,7 +39,7 @@
       <% end %>
     </td>
   <% end %>
-  <td id="recording-length" class="text-left" data-full-length="<%=recording[:playbacks].first[:length]%>">
+  <td id="recording-length" class="text-left" data-full-length="<%= recording[:playbacks].empty? ? 0 : recording[:playbacks].first[:length]%>">
     <%= recording_length(recording[:playbacks]) %>
   </td>
   <td id="recording-users" class="text-left">
@@ -53,18 +53,19 @@
         <button class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown"><i class="dropdown-icon fas fa-link px-2"></i> <%= t("recording.visibility.unlisted") %></button>
       <% end %>
       <div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
-        <%= button_to update_recording_path(@room, record_id: recording[:recordID], state: "public"), class: "dropdown-item" do %>
+        <%= button_to update_recording_path(meetingID: recording[:meetingID], record_id: recording[:recordID], state: "public"), class: "dropdown-item", "data-disable": "" do %>
           <i class="dropdown-icon fas fa-globe"></i> <%= t("recording.visibility.public") %>
         <% end %>
-        <%= button_to update_recording_path(@room, record_id: recording[:recordID], state: "unlisted"), class: "dropdown-item" do %>
+        <%= button_to update_recording_path(meetingID: recording[:meetingID], record_id: recording[:recordID], state: "unlisted"), class: "dropdown-item", "data-disable": "" do %>
           <i class="dropdown-icon fas fa-link"></i> <%= t("recording.visibility.unlisted") %>
         <% end %>
       </div>
     </div>
   </td>
   <td>
-    <% recording[:playbacks].each do |p| %>
-      <%= link_to p[:type].capitalize, p[:url], class: "btn btn-sm btn-primary", target: "_blank" %>
+    <% sorted_formats = recording[:playbacks].sort_by! { |p| p[:type] } %>
+    <% sorted_formats.each do |p| %>
+      <%= link_to t("recording.format.#{p[:type]}"), p[:url], class: "btn btn-sm btn-primary", target: "_blank" %>
     <% end %>
   </td>
   <td class="text-center">
@@ -73,12 +74,13 @@
         <i class="fas fa-ellipsis-v px-4"></i>
       </a>
       <div class="dropdown-menu dropdown-menu-right">
-        <% p = recording[:playbacks].find do |p| p.key?(:length) end %>
+        <% recording_links = "" %>
+        <% p = recording[:playbacks].each do |p| recording_links.concat(p[:url] + "\n\n") if p.key?(:length) end %>
         <% if p %>
-          <a class="dropdown-item email-link" data-pres-link="<%= p[:url] %>"><i class="dropdown-icon far fa-envelope"></i> <%= t("recording.email") %></a>
+          <a class="dropdown-item email-link" data-pres-link="<%= recording_links %>"><i class="dropdown-icon far fa-envelope"></i> <%= t("recording.email") %></a>
           <div class="dropdown-divider"></div>
         <% end %>
-        <%= button_to delete_recording_path(@room, record_id: recording[:recordID]), method: :delete, class: "dropdown-item" do %>
+        <%= button_to delete_recording_path(meetingID: recording[:meetingID], record_id: recording[:recordID]), method: :delete, class: "dropdown-item", "data-disable": "" do %>
           <i class="dropdown-icon far fa-trash-alt"></i> <%= t("delete") %>
         <% end %>
       </div>

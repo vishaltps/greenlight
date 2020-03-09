@@ -15,7 +15,7 @@
 
 <tr>
   <td>
-    <div id="recording-title">
+    <div id="recording-title" class="form-inline edit_hover_class" data-recordid="<%= recording[:recordID] %>" data-room-uid="<%= room_uid_from_bbb(recording[:meetingID]) %>" data-path="<%= rename_recording_path(meetingID: recording[:meetingID], record_id: recording[:recordID]) %>">
       <text>
         <% if recording[:metadata][:name] %>
           <%= recording[:metadata][:name] %>
@@ -29,25 +29,19 @@
     </div>
   </td>
   <% if recording_thumbnails? %>
-    <td>
+    <td class="overflow-hidden">
       <% p = recording[:playbacks].find do |p| p.key?(:preview) end %>
       <% if p %>
-        <% p[:preview][:images][:image].each do |img| %>
+        <% safe_recording_images(p[:preview][:images][:image]).each do |img| %>
           <%= image_tag(img[:content].strip, class: "thumbnail px-2") %>
         <% end %>
       <% end %>
     </td>
   <% end %>
-  <td id="recording-length" class="text-left">
-    <div class="small text-muted text-uppercase">
-      <%= t("recording.table.length") %>
-    </div>
+  <td id="recording-length" class="text-left" data-full-length="<%=recording[:playbacks].first[:length]%>">
     <%= recording_length(recording[:playbacks]) %>
   </td>
   <td id="recording-users" class="text-left">
-    <div class="small text-muted text-uppercase">
-      <%= t("recording.table.users") %>
-    </div>
     <%= recording[:participants] %>
   </td>
   <td class="text-left">
@@ -60,9 +54,10 @@
     </div>
   </td>
   <td>
+    <% sorted_formats =  recording[:playbacks].sort_by! {|p| p[:type]} %>
     <% p = recording[:playbacks].find do |p| p.key?(:length) end %>
-    <% recording[:playbacks].each do |p| %>
-      <%= link_to p[:type].capitalize, p[:url], class: "btn btn-sm btn-primary", target: "_blank" %>
+    <% sorted_formats.each do |p| %>
+      <%= link_to t("recording.format.#{p[:type]}"), p[:url], class: "btn btn-sm btn-primary", target: "_blank" %>
     <% end %>
   </td>
 </tr>

@@ -18,32 +18,10 @@ $(document).on('turbolinks:load', function(){
   var controller = $("body").data('controller');
   var action = $("body").data('action');
 
-  if(controller == "rooms" && action == "show" || controller == "rooms" && action == "update"){
-
-    // Set a room block rename event
-    var configure_room_block = function(room_block){
-      if(!room_block.is('#home_room_block')){
-
-        // Register a click event on each room_block rename dropdown
-        room_block.find('#rename-room-button').on('click', function(e){
-
-          room_block.find('#room-name-editable-input').on('focusout', function(){
-            submit_rename_request(room_block.find('.card'));
-            $(window).off('mousedown keydown');
-          });
-
-          room_block.click(function(linkEvent) { linkEvent.preventDefault(); });
-          room_block.find('#room-name').hide();
-          room_block.find('#room-name-editable').show();
-          room_block.find('#room-name-editable-input').select()
-
-          // Stop automatic refresh
-          e.preventDefault();
-
-          register_window_event(room_block.find('.card'), 'room-name-editable-input', null);
-        });
-      }
-    }
+  if(controller == "rooms" && action == "show" 
+    || controller == "rooms" && action == "update" 
+    || controller == "users" && action == "recordings" 
+    || controller == "admins" && action == "server_recordings"){
 
     // Set a room header rename event
     var configure_room_header = function(room_title){
@@ -61,10 +39,10 @@ $(document).on('turbolinks:load', function(){
         room_title.find('#user-text').fadeTo('medium', 0.7);
         room_title.find('#user-text').attr("contenteditable", true);
         room_title.find('#user-text').focus();
-          
+
         // Stop automatic refresh
         e.preventDefault();
-  
+
         register_window_event(room_title, 'user-text', '#edit-room', 'edit-room');
       }
 
@@ -90,18 +68,18 @@ $(document).on('turbolinks:load', function(){
           submit_rename_request(recording_title);
           return;
         }
-        
+
         recording_title.addClass("dotted_underline");
         recording_title.fadeTo('medium', 0.7);
         recording_title.find('text').attr("contenteditable", true);
         recording_title.find('text').focus();
-        
+
         // Stop automatic refresh
         e.preventDefault();
-        
+
         register_window_event(recording_title, 'recording-text', '#edit-record', 'edit-recordid');
       }
-      
+
       recording_title.find('a').on('click focusout', function(e){
         register_recording_title_event(e);
       });
@@ -126,12 +104,12 @@ $(document).on('turbolinks:load', function(){
           $(clickEvent.target).data(edit_button_data) === element.find(edit_button_id).data(edit_button_data)){
           return;
         }
-        
+
         // Check if event is keydown and enter key is not pressed
         if(clickEvent.type == "keydown" && clickEvent.which !== 13){
           return;
         }
-        
+
         clickEvent.preventDefault();
         submit_rename_request(element);
 
@@ -142,55 +120,42 @@ $(document).on('turbolinks:load', function(){
 
     // Apply ajax request depending on the element that triggered the event
     var submit_rename_request = function(element){
-      if(element.data('room-uid')){
-        submit_update_request({
-          setting: "rename_block",
-          room_block_uid: element.data('room-uid'),
-          room_name: element.find('#room-name-editable-input').val(),
-        });
-      }
-      else if(element.is('#room-title')){
+      if(element.is('#room-title')){
         submit_update_request({
           setting: "rename_header",
-          room_name: element.find('#user-text').text(),
-        });
+          name: element.find('#user-text').text(),
+        }, element.data('path'), "POST");
       }
       else if(element.is('#recording-title')){
         submit_update_request({
           setting: "rename_recording",
           record_id: element.data('recordid'),
           record_name: element.find('text').text(),
-        });
+          room_uid: element.data('room-uid'),
+        }, element.data('path'), "PATCH");
       }
     }
 
     // Helper for submitting ajax requests
-    var submit_update_request = function(data){
+    var submit_update_request = function(data, path, action){
       // Send ajax request for update
       $.ajax({
-        url: window.location.pathname,
-        type: "PATCH",
+        url: path,
+        type: action,
         data: data,
       });
     }
 
     // Elements that can be renamed
     var room_title = $('#room-title');
-    var room_blocks = $('#room_block_container').find('a');
     var recording_rows = $('#recording-table').find('tr');
 
     // Configure renaming for room header
     configure_room_header(room_title);
 
-    // Configure renaming for room blocks
-    room_blocks.each(function(){
-      var room_block = $(this)
-      configure_room_block(room_block)
-    });
-
     // Configure renaming for recording rows
     recording_rows.each(function(){
-      var recording_title = $(this).find('#recording-title');      
+      var recording_title = $(this).find('#recording-title');
       configure_recording_row(recording_title);
     });
   }

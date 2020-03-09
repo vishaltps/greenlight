@@ -17,16 +17,10 @@
 # with BigBlueButton; if not, see <http://www.gnu.org/licenses/>.
 
 class MainController < ApplicationController
-  # before_action :redirect_to_room
-
+  include Registrar
   # GET /
   def index
-  end
-
-  private
-
-  def redirect_to_room
-    # If the user is logged in already, move them along to their room.
-    redirect_to room_path(current_user.room) if current_user
+    # Store invite token
+    session[:invite_token] = params[:invite_token] if params[:invite_token] && invite_registration
   end
 end
